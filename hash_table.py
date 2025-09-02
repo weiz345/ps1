@@ -57,21 +57,57 @@ print(ht.get("apple"))   # None
 class DynamicHashTable(HashTable):
     def __init__(self, size):
         super().__init__(size)
-        self.count = 0
+        self.count = 0  # number of key-value pairs
         self.load_factor_threshold = 0.7
 
     def calculate_load_factor(self):
-        # TODO: Implement for 12.3
-        pass
+        return self.count / self.size
 
     def insert(self, key, value):
-        # TODO: Implement for 12.3
-        pass
+        index = self._hash(key)
+        bucket = self.table[index]
+
+        for i, (k, v) in enumerate(bucket):
+            if k == key:
+                bucket[i] = (key, value)
+                return
+
+        bucket.append((key, value))
+        self.count += 1
+
+        # Check load factor
+        if self.calculate_load_factor() > self.load_factor_threshold:
+            self.resize()
 
     def remove(self, key):
-        # TODO: Implement for 12.3
-        pass
+        index = self._hash(key)
+        bucket = self.table[index]
+
+        for i, (k, v) in enumerate(bucket):
+            if k == key:
+                del bucket[i]
+                self.count -= 1
+                return True
+        return False
 
     def resize(self):
-        # TODO: Implement for 12.3
-        pass
+        old_table = self.table
+        old_size = self.size
+        self.size *= 2  # double the table size
+        self.table = [[] for _ in range(self.size)]
+        self.count = 0  # will be updated by reinsertion
+
+        for bucket in old_table:
+            for key, value in bucket:
+                self.insert(key, value)  # rehash into new table
+
+dht = DynamicHashTable(4)
+
+dht.insert("apple", 1)
+dht.insert("banana", 2)
+dht.insert("cherry", 3)
+print("Load factor:", dht.calculate_load_factor())  # 0.75 triggers resize
+
+print(dht.get("banana"))  # 2
+dht.remove("banana")
+print(dht.get("banana"))  # None
